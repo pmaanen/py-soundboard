@@ -6,29 +6,40 @@ import vlc
 class myButton:
     def __init__(self,parent):
         self.parent=parent
-        self.myButton=tki.Button(parent,text="",width=20,height=5, command=self.onLeftClick,bg='green')
-        self.hasFile=False
+        self.myButton=tki.Button(parent,text="",width=20,height=5, command=self.onLeftClick,bg='grey',fg="grey")
         self.file=None
-        self.isPlaying=False
+        self.state="nofile"
         self.p=None
         self.myButton.bind("<Button-2>",self.onRightClick)
 
     def onRightClick(self,event):
-        if(self.isPlaying):
-            self.p.stop()
-        if(self.file is None):
+        if self.state=="nofile":
             self.parent.master.myButtons.remove(self)
             self.parent.master.drawButtons()
-        self.file=None
-        self.hasFile=False
-        self.p=None
-        self.isPlaying=False
-        self.myButton.config(text="")
-        
+            self.state="nofile"
+            return
+        elif self.state=="stop":
+            self.file=None
+            self.p=None
+            self.myButton.config(text="")
+            self.state="nofile"
+            return
+        else:
+            self.state="stop"
+            self.p.stop()
+            self.myButton.config(fg="grey")
+            self.isPlaying=False
+            return            
     def onLeftClick(self):
-        if(not self.hasFile):
+        if self.state=="nofile":
+            self.state="stop"
             self.file=askopenfilename()
+            if self.file=="":
+                self.file=None
+                self.state="nofile"
+                return
             self.initFile()
+            self.myButton.config(fg="grey")
         else:
             self.playFile()
 
@@ -36,17 +47,18 @@ class myButton:
         self.p = vlc.MediaPlayer("file://"+self.file)
         self.hasFile=True
         self.myButton.config(text=self.file.split("/")[-1])
-
+        self.state="stop"
     def playFile(self):
-        if(self.isPlaying):
-            self.p.stop()
-            self.isPlaying=False
+        if self.state=="play":
+            self.p.pause()
+            self.state="pause"
             self.myButton.config(fg="red")
             self.myButton.config(bg="red")
             self.myButton.config(activeforeground="red")
-        else:
+            return
+        if not self.state=="play":
             self.p.play()
-            self.isPlaying=True
+            self.state="play"
             self.myButton.config(fg="green")
             self.myButton.config(bg="green")
             self.myButton.config(activeforeground="green")
@@ -68,8 +80,7 @@ class GUI(tki.Tk):
         self.aMenu.bind_all("<Command-f>", self.addFiles)
         # attach buttons to frame
         self.myButtons=[]
-        for _ in range(9):
-                self.myButtons.append(myButton(self.aFrame))
+        self.myButtons.append(myButton(self.aFrame))
         self.drawButtons()
         self.config(menu=self.menubar)
         
@@ -77,7 +88,7 @@ class GUI(tki.Tk):
         files=list(askopenfilenames())
         for file in files:
             for button in self.myButtons:
-                if(button.hasFile==False and len(files)!=0):
+                if(button.state=="nofile" and len(files)!=0):
                     button.file=files.pop()
                     button.initFile()
         for file in files:
