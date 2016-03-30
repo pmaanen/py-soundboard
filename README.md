@@ -1,5 +1,5 @@
 # py-soundboard
-A python-tool to allow playback of sound clips through a click-based interface.
+A python-tool to allow playback of sound clips through a click-based interface. Needs the vlc player python bindings (provided)
 
 Usage:
 >./python soundboard.py
