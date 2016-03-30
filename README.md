@@ -1,5 +1,4 @@
 # py-soundboard
-A python soundboard. Needs vlc.py
 ==========
 A python-tool to allow playback of sound clips through a click-based interface.
 
